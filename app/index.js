@@ -62,7 +62,7 @@ const callback = () => {
     }
   });
 
-  const element = document.querySelector(".controls");
+  const element = document.querySelector(".container");
   element.addEventListener("click", event => {
     const method = event.target.value;
     switch (method) {
@@ -71,9 +71,28 @@ const callback = () => {
           isLoggedIn: false
         });
         break;
-      case "log in":
+      case "Login":
+        
+        const username = document.querySelector("#username").value
+        const password = document.querySelector("#password").value
 
-        cti.userLoggedIn();
+        if(!username || !password) {
+          cti.sendError({
+            type: "error",
+            message: "Please enter your Voys login details."
+          });
+        } else {
+          const string =  username + ':' + password
+          const hash = encode(string)
+  
+          state.token = hash
+  
+          cti.userLoggedIn();
+          document.querySelector("#login").style.visibility = 'hidden';
+        }
+
+
+
         break;
       case "log out":
         cti.userLoggedOut();
