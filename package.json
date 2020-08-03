@@ -1,0 +1,20 @@
+{
+  "name": "hubspot-voys-integration",
+  "version": "0.0.1",
+  "description": "HubSpot calling extension for voys.nl",
+  "private": false,
+  "scripts": {
+    "build": "webpack",
+    "start": "npm i && webpack-dev-server --open"
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "clean-webpack-plugin": "^0.1.19",
+    "webpack": "^4.44.1",
+    "webpack-cli": "^3.1.2",
+    "webpack-dev-server": "^3.1.10"
+  },
+  "dependencies": {
+    "@hubspot/calling-extensions-sdk": "^0.0.6"
+  }
+}
