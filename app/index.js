@@ -1,4 +1,6 @@
 import CallingExtensions, { Constants } from "@hubspot/calling-extensions-sdk";
+import { encode, decode } from 'js-base64';
+
 
 const voysAPI = 'https://api.voipgrid.nl/api/clicktodial/'
 
@@ -27,7 +29,7 @@ const callback = () => {
     eventHandlers: {
       onReady: () => {
         cti.initialized({
-          isLoggedIn: true,
+          isLoggedIn: false,
           sizeInfo: defaultSize
         });
       },
@@ -45,8 +47,6 @@ const callback = () => {
         );
       },
       onEngagementCreated: (data, rawEvent) => {
-
-        console.log(data)
         const { engagementId } = data;
         state.engagementId = engagementId;
         appendMsg(data, rawEvent);
@@ -64,14 +64,15 @@ const callback = () => {
 
   const element = document.querySelector(".controls");
   element.addEventListener("click", event => {
-    const clickedButtonValue = event.target.value;
-    switch (clickedButtonValue) {
+    const method = event.target.value;
+    switch (method) {
       case "initialized":
         cti.initialized({
-          isLoggedIn: true
+          isLoggedIn: false
         });
         break;
       case "log in":
+
         cti.userLoggedIn();
         break;
       case "log out":
