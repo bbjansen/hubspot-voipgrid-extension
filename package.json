@@ -5,9 +5,10 @@
   "private": false,
   "scripts": {
     "build": "webpack",
-    "start": "npm i && webpack-dev-server --open"
+    "start": "webpack-dev-server",
+    "dev": "webpack-dev-server --open"
   },
-  "license": "ISC",
+  "license": "gpl-3.0",
   "devDependencies": {
     "clean-webpack-plugin": "^0.1.19",
     "webpack": "^4.44.1",
