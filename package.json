@@ -1,7 +1,7 @@
 {
-  "name": "hubspot-voys-integration",
+  "name": "hubspot-voipgrid-integration",
   "version": "0.0.1",
-  "description": "HubSpot calling extension for voys.nl",
+  "description": "HubSpot calling extension for VoIPGRID.",
   "private": false,
   "scripts": {
     "build": "webpack",
