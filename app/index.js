@@ -1,25 +1,12 @@
-import CallingExtensions, { Constants } from "@hubspot/calling-extensions-sdk";
+import CallingExtensions, { Constants } from '@hubspot/calling-extensions-sdk';
 import { encode, decode } from 'js-base64';
-
-
-const voysAPI = 'https://api.voipgrid.nl/api/clicktodial/'
+import axios from 'axios'
 
 const callback = () => {
-  let rowId = 0;
-  const incomingMsgContainer = document.querySelector("#incomingMsgs");
-
-  function appendMsg(data, event) {
-    const div = document.createElement("div");
-    rowId += 1;
-    div.innerHTML = `<span>${rowId}: </span><span>${
-      event.type
-    }, ${JSON.stringify(data)}</span>`;
-    incomingMsgContainer.append(div);
-  }
 
   const defaultSize = {
     width: 400,
-    height: 600
+    height: 340
   };
 
   const state = {};
@@ -32,24 +19,66 @@ const callback = () => {
           isLoggedIn: false,
           sizeInfo: defaultSize
         });
+
       },
       onDialNumber: (data, rawEvent) => {
-        appendMsg(data, rawEvent);
-        const { phoneNumber } = data;
-        state.phoneNumber = phoneNumber;
+        
+        state.data = data;
+
+        // log
+        console.log(data )
+        document.querySelector('#screen').style.display = 'none';
+        document.querySelector('#dialing').style.display = 'block';
+        document.querySelector('.phonenumber').innerHTML = data.phoneNumber;
+        document.querySelector('#controls').style.display = 'block';
+
+        const payload = {
+          b_number: data.phoneNumber,
+          b_cli: '+31203080675',
+          auto_answer: false
+        }
+
+        const headers =  {
+          'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/json',
+          // 'Content-Length': new TextEncoder().encode(payload).length,
+          'Accept': 'application/json',
+          'Authorization': 'Basic ' + state.token
+        }
+
+        const initiateCall = axios.post('https://api.voipgrid.nl/api/clicktodial/', payload,
+        {
+          timeout: 3000,
+          headers: headers
+        })
+        .catch(err => {
+          console.log(err)
+
+          cti.sendError({
+            type: errorType.GENERIC,
+            message: 'Error connecting to VoIPGRID'
+          });
+        })
+
+        console.log(initiateCall)
+
         window.setTimeout(
           () =>
             cti.outgoingCall({
               createEngagement: true,
-              phoneNumber
+              phoneNumber: data.phoneNumber
             }),
           500
         );
+
+
       },
       onEngagementCreated: (data, rawEvent) => {
+
+        // log
+        console.log(data)
         const { engagementId } = data;
         state.engagementId = engagementId;
-        appendMsg(data, rawEvent);
       },
       onEndCall: () => {
         window.setTimeout(() => {
@@ -57,29 +86,31 @@ const callback = () => {
         }, 500);
       },
       onVisibilityChanged: (data, rawEvent) => {
-        appendMsg(data, rawEvent);
       }
     }
   });
 
-  const element = document.querySelector(".container");
-  element.addEventListener("click", event => {
+  const element = document.querySelector('.container');
+
+  element.addEventListener('click', event => {
+    
     const method = event.target.value;
+
     switch (method) {
-      case "initialized":
+      case 'initialized':
         cti.initialized({
           isLoggedIn: false
         });
         break;
-      case "Login":
+      case 'Login':
         
-        const username = document.querySelector("#username").value
-        const password = document.querySelector("#password").value
+        const username = document.querySelector('#username').value
+        const password = document.querySelector('#password').value
 
         if(!username || !password) {
           cti.sendError({
-            type: "error",
-            message: "Please enter your Voys login details."
+            type: 'error',
+            message: 'Please enter your VoIPGRID login details.'
           });
         } else {
           const string =  username + ':' + password
@@ -88,62 +119,25 @@ const callback = () => {
           state.token = hash
   
           cti.userLoggedIn();
-          document.querySelector("#login").style.visibility = 'hidden';
+          document.querySelector('#login').style.display = 'none';
+          document.querySelector('#screen').style.display = 'block';
         }
 
+        break;
+      case 'End Call':
+        document.querySelector('#screen').style.display = 'block';
+        document.querySelector('#dialing').style.display = 'none';
+        document.querySelector('#controls').style.display = 'none';
 
 
-        break;
-      case "log out":
-        cti.userLoggedOut();
-        break;
-      // Calls
-      case "incoming call":
-        window.setTimeout(() => {
-          cti.incomingCall();
-        }, 500);
-        break;
-      case "outgoing call started":
-        window.setTimeout(() => {
-          cti.outgoingCall({
-            createEngagement: "true",
-            phoneNumber: state.phoneNumber
-          });
-        }, 500);
-        break;
-      case "call answered":
-        cti.callAnswered();
-        break;
-      case "call ended":
-        cti.callEnded();
-        break;
-      case "call completed":
-        cti.callCompleted({
-          engagementId: state.engagementId
-        });
-        break;
-      case "send error":
-        cti.sendError({
-          type: errorType.GENERIC,
-          message: "This is a message shown in Hubspot UI"
-        });
-        break;
-      case "change size":
-        defaultSize.width += 20;
-        defaultSize.height += 20;
-        cti.resizeWidget({
-          width: defaultSize.width,
-          height: defaultSize.height
-        });
-        break;
       default:
         break;
     }
   });
 };
 
-if (document.readyState === "interactive" || document.readyState === "complete") {
+if (document.readyState === 'interactive' || document.readyState === 'complete') {
   window.setTimeout(() => callback(), 1000);
 } else {
-  document.addEventListener("DOMContentLoaded", callback);
+  document.addEventListener('DOMContentLoaded', callback);
 }

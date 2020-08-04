@@ -1,40 +1,42 @@
 <html>
   <head>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mini.css/3.0.1/mini-default.min.css">
+    <link rel="stylesheet" href="./assets/style.css">
+
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
   </head>
 
   <body>
-    <div class="container">
+    <div class="container" style="padding:0;">
 
       <div id="login">
         <form>
           <fieldset>
-            <legend>Voys Login</legend>
+            <legend>VoIPGRID Login</legend>
             <input type="text" id="username" placeholder="Username"/>
             <input type="password" id="password" placeholder="Password"/>
-            <input type="button" class="tertiary" value="Login" />
           </fieldset>
+          <input type="button" class="tertiary" style="width:100%;" value="Login" />
 
         </form>
+      </div>
+
+      <div id="screen">
+        <p>Start a call by clicking <b>Call</b> button in the left top corner and select "VoIPGRID" as <b>Call Provider</b>.</p>
+      </div>
+
+      <div id="dialing">
+
+        <div class="spinner primary"></div>
+        <div class="phonenumber"></div>
+        <div class="status">Calling...</div>
 
       </div>
 
-      <div>Calling related methods</div>
-      <input type="button" value="outgoing call started" />
-      <input type="button" value="call answered" />
-      <br />
-      <input type="button" class="secondary" value="call ended" />
-      <input type="button" class="tertiary" value="call completed" />
-      <hr />
-      <div>Misc. events</div>
-      <input type="button" value="send error" />
-      <input type="button" value="change size" />
-      <hr />
-      <div>Incoming Messages</div>
-      <div id="incomingMsgs"></div>
-
+      <div id="controls">
+          <input type="button" class="secondary" style="width:100%;" value="End Call" />
+      </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>

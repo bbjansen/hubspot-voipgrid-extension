@@ -1,8 +1,40 @@
 body {
-    background: #e9ebed;
+    background: #F4F6F6;
 }
 
-.controls {
-    width: 300px;
-    height: 600px;
+#login {
+    display: block;
+}
+
+#screen {
+    display: none;
+    text-align: center;
+    color: #000000;
+    font-size: 20;
+}
+#dialing {
+    text-align: center;
+    display: none;
+}
+
+.phonenumber {
+    font-size: 25px;
+    font-weight: bold;
+    color: #000000;
+
+}
+
+.status {
+    font-size: 20px;
+    color: #1c1c1c;
+}
+
+.spinner {
+    width: 150px;
+    height: 150px;
+}
+#controls {
+    text-align: center;
+    display: none;
+    bottom: 0;
 }
