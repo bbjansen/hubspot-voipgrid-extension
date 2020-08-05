@@ -9,6 +9,6 @@ Call with VoIPGrid in HubSpot.
 // Add the following localstorage override for local development
 localStorage.setItem(
   "LocalSettings:Sales:CallingExtensions",
-  '{"name": "Voys", "url": "https://139.162.170.247:9025"}'
+  '{"name": "Voys", "url": "https://localhost:9025"}'
 );
 ```
