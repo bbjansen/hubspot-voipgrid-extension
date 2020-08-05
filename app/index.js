@@ -1,6 +1,7 @@
 import CallingExtensions, { Constants } from '@hubspot/calling-extensions-sdk';
 import { encode, decode } from 'js-base64';
 import axios from 'axios'
+import Cookies from 'js-cookie'
 
 const callback = () => {
 
@@ -15,10 +16,28 @@ const callback = () => {
     debugMode: true,
     eventHandlers: {
       onReady: () => {
-        cti.initialized({
-          isLoggedIn: false,
-          sizeInfo: defaultSize
-        });
+
+        console.log('token' + Cookies.get('token'))
+        
+        if(Cookies.get('token')) {
+          cti.initialized({
+            isLoggedIn: true,
+            sizeInfo: defaultSize
+          });
+
+          state.token = Cookies.get('token')
+
+          document.querySelector('#login').style.display = 'none';
+          document.querySelector('#screen').style.display = 'block';
+
+        } else {
+          cti.initialized({
+            isLoggedIn: false,
+            sizeInfo: defaultSize
+          });         
+        }
+
+
 
       },
       onDialNumber: (data, rawEvent) => {
@@ -103,7 +122,7 @@ const callback = () => {
         });
         break;
       case 'Login':
-        
+
         const username = document.querySelector('#username').value
         const password = document.querySelector('#password').value
 
@@ -115,7 +134,9 @@ const callback = () => {
         } else {
           const string =  username + ':' + password
           const hash = encode(string)
-  
+
+          Cookies.set('token', hash, { expires: 7 });
+
           state.token = hash
   
           cti.userLoggedIn();
