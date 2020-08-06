@@ -216,18 +216,14 @@ const callback = () => {
           document.querySelector('#screen').style.display = 'none';
           document.querySelector('#dialing').style.display = 'block';
       
-          window.setTimeout(
-           () =>
-            cti.callEnded(),
-            3000
-          );
-      
           window.setTimeout(function() {
 
             cti.callCompleted({
               engagementId: state.engagement_id,
               hideWidget: false
             })
+
+            //TO DO: UPDATE ENGAGEMENT VIA HS API
 
             cti.callEnded()
           },
