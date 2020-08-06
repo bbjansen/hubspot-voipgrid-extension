@@ -1,4 +1,6 @@
-import CallingExtensions, { Constants } from '@hubspot/calling-extensions-sdk';
+import CallingExtensions from "./assets/js/CallingExtensions";
+import { errorType } from "./assets/js/Constants";
+
 import { encode, decode } from 'js-base64';
 import axios from 'axios'
 import Cookies from 'js-cookie'
@@ -17,8 +19,6 @@ const callback = () => {
     eventHandlers: {
       onReady: () => {
 
-        console.log('token' + Cookies.get('token'))
-        
         if(Cookies.get('token')) {
           cti.initialized({
             isLoggedIn: true,
@@ -26,7 +26,6 @@ const callback = () => {
           });
 
           state.token = Cookies.get('token')
-
           document.querySelector('#login').style.display = 'none';
           document.querySelector('#screen').style.display = 'block';
 
@@ -36,8 +35,6 @@ const callback = () => {
             sizeInfo: defaultSize
           });         
         }
-
-
 
       },
       onDialNumber: (data, rawEvent) => {
@@ -65,10 +62,30 @@ const callback = () => {
           'Authorization': 'Basic ' + state.token
         }
 
-        const initiateCall = axios.post('https://api.voipgrid.nl/api/clicktodial/', payload,
+        // REPLACE CORS ANYWHERE WITH OUR OWN PROXY
+        axios.post('https://cors-anywhere.herokuapp.com/https://api.voipgrid.nl/api/clicktodial/', payload,
         {
-          timeout: 3000,
+          timeout: 30000,
           headers: headers
+        })
+        .then(data => {
+
+          document.querySelector('.status').innerHTML = 'Call Started';
+
+          console.log("CALL STARTED")
+          console.log(data)
+  
+          state.call_id = data.callid
+
+          window.setTimeout(
+            () =>
+              cti.outgoingCall({
+                createEngagement: true,
+                phoneNumber: data.b_number
+              }),
+            500
+          );
+          
         })
         .catch(err => {
           console.log(err)
@@ -79,27 +96,18 @@ const callback = () => {
           });
         })
 
-        console.log(initiateCall)
-
-        window.setTimeout(
-          () =>
-            cti.outgoingCall({
-              createEngagement: true,
-              phoneNumber: data.phoneNumber
-            }),
-          500
-        );
-
 
       },
       onEngagementCreated: (data, rawEvent) => {
 
+        console.log("ENGAGEMENT CREATED")
         // log
         console.log(data)
         const { engagementId } = data;
         state.engagementId = engagementId;
       },
       onEndCall: () => {
+        console.log('call ended')
         window.setTimeout(() => {
           cti.callEnded();
         }, 500);
@@ -143,14 +151,31 @@ const callback = () => {
           document.querySelector('#login').style.display = 'none';
           document.querySelector('#screen').style.display = 'block';
         }
-
         break;
-      case 'End Call':
+
+      case 'Call Ended':
+        cti.callEnded();
+
+        document.querySelector('.status').innerHTML = 'Call Ended';
+
+
         document.querySelector('#screen').style.display = 'block';
         document.querySelector('#dialing').style.display = 'none';
         document.querySelector('#controls').style.display = 'none';
 
+      case "Call Completed":
+        cti.callCompleted({
+          engagementId: state.engagementId
+        });
 
+        document.querySelector('.status').innerHTML = 'Call Completed';
+
+        document.querySelector('#screen').style.display = 'block';
+        document.querySelector('#dialing').style.display = 'none';
+        document.querySelector('.phonenumber').innerHTML = '';
+
+        document.querySelector('#controls').style.display = 'none';
+        break;
       default:
         break;
     }
