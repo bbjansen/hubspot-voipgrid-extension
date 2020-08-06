@@ -38,15 +38,17 @@ const callback = () => {
 
       },
       onDialNumber: (data, rawEvent) => {
-        
-        state.data = data;
 
         // log
+        console.log("DAILING")
         console.log(data )
+        
+        state.req_data = data;
+
+        document.querySelector('.status').innerHTML = 'Dailing...';
+        document.querySelector('.phonenumber').innerHTML = data.phoneNumber;
         document.querySelector('#screen').style.display = 'none';
         document.querySelector('#dialing').style.display = 'block';
-        document.querySelector('.phonenumber').innerHTML = data.phoneNumber;
-        document.querySelector('#controls').style.display = 'block';
 
         const payload = {
           b_number: data.phoneNumber,
@@ -65,27 +67,31 @@ const callback = () => {
         // REPLACE CORS ANYWHERE WITH OUR OWN PROXY
         axios.post('https://cors-anywhere.herokuapp.com/https://api.voipgrid.nl/api/clicktodial/', payload,
         {
-          timeout: 30000,
+          timeout: 10000,
           headers: headers
         })
-        .then(data => {
+        .then(res => {
 
-          document.querySelector('.status').innerHTML = 'Call Started';
-
+          // log
           console.log("CALL STARTED")
-          console.log(data)
-  
-          state.call_id = data.callid
+          console.log(res.data)
+          //
+
+          state.res_data = res.data  
+          state.call_id = res.data.callid
 
           window.setTimeout(
             () =>
               cti.outgoingCall({
                 createEngagement: true,
-                phoneNumber: data.b_number
+                phoneNumber: res.data.b_number
               }),
             500
           );
-          
+
+          var event = new CustomEvent('status', { 'detail ': res.data });
+          document.dispatchEvent(event);
+
         })
         .catch(err => {
           console.log(err)
@@ -100,11 +106,12 @@ const callback = () => {
       },
       onEngagementCreated: (data, rawEvent) => {
 
-        console.log("ENGAGEMENT CREATED")
         // log
+        console.log("ENGAGEMENT CREATED")
         console.log(data)
-        const { engagementId } = data;
-        state.engagementId = engagementId;
+        //
+
+        state.engagement_id = data;
       },
       onEndCall: () => {
         console.log('call ended')
@@ -116,6 +123,145 @@ const callback = () => {
       }
     }
   });
+
+  document.addEventListener('status', function(e) {
+    console.log('LISTENER')
+    console.log(state.call_id)
+
+    callStatus()
+  });
+
+
+  function callStatus() {
+    state.timerId =  setTimeout(function () {
+      console.log('ID' + state.timerId)
+      console.log('THISID' + this.timerId)
+
+      const headers =  {
+        'Access-Control-Allow-Origin': '*',
+        'Content-Type': 'application/json',
+        // 'Content-Length': new TextEncoder().encode(payload).length,
+        'Accept': 'application/json',
+        'Authorization': 'Basic ' + state.token
+      }
+
+      // REPLACE CORS ANYWHERE WITH OUR OWN PROXY
+      axios.get('https://cors-anywhere.herokuapp.com/https://api.voipgrid.nl/api/clicktodial/' + state.call_id,
+      {
+        timeout: 10000,
+        headers: headers
+      })
+      .then(res => {
+
+        // log
+        console.log("CALL STATUS")
+        console.log(res.data.status)
+        console.log(res.data)
+
+        state.call_res = res.data.status
+
+        if(res.data === null) {
+          console.log("NULL")
+
+          document.querySelector('.status').innerHTML = 'Initiating Call...';
+          document.querySelector('.phonenumber').innerHTML = state.phoneNumber;
+
+          document.querySelector('#screen').style.display = 'none';
+          document.querySelector('#dialing').style.display = 'block';
+        }
+        if(res.data.status === 'dialing_a') {
+          console.log("DAILING_A")
+
+          document.querySelector('.status').innerHTML = 'Directing Call...';
+          document.querySelector('.phonenumber').innerHTML = state.phoneNumber;
+
+          document.querySelector('#screen').style.display = 'none';
+          document.querySelector('#dialing').style.display = 'block';
+
+        }
+        if(res.data.status === 'dialing_b') {
+          console.log("DAILING_B")
+
+          document.querySelector('.status').innerHTML = 'Dailing Contact...';
+          document.querySelector('.phonenumber').innerHTML = state.phoneNumber;
+
+          document.querySelector('#screen').style.display = 'none';
+          document.querySelector('#dialing').style.display = 'block';
+
+        }
+        else if(res.data.status === 'connected') {
+          console.log("CONNECTED")
+
+          document.querySelector('.status').innerHTML = 'Call Connected';
+          document.querySelector('.phonenumber').innerHTML = state.phoneNumber;
+
+          document.querySelector('#screen').style.display = 'none';
+          document.querySelector('#dialing').style.display = 'block';
+          
+          window.setTimeout(
+            () =>
+              cti.callAnswered(),
+            500
+          );
+        }
+        else if(res.data.status === 'disconnected') {
+          console.log("DISCONNECTED")
+          clearTimeout(state.timerId);
+
+          document.querySelector('.status').innerHTML = 'Call Disconnected';
+          document.querySelector('.phonenumber').innerHTML = state.phoneNumber;
+
+          document.querySelector('#screen').style.display = 'none';
+          document.querySelector('#dialing').style.display = 'nlock';
+
+          window.setTimeout(
+            () =>
+            cti.callEnded(),
+            500
+          );
+
+          window.setTimeout(function() {
+            document.querySelector('#screen').style.display = 'block';
+            document.querySelector('#dialing').style.display = 'none';
+
+            cti.callCompleted({
+              engagementId: state.engagement_id,
+              hideWidget: true
+            })
+    
+          },
+          500);
+        }
+        else if(res.data.status === 'failed_a' || 'failed_b') {
+          console.log("FAILED")
+          clearTimeout(state.timerId);
+
+
+          document.querySelector('.status').innerHTML = 'Call Failed';
+          document.querySelector('.phonenumber').innerHTML = state.phoneNumber;
+
+          document.querySelector('#screen').style.display = 'block';
+          document.querySelector('#dialing').style.display = 'none';
+
+
+          window.setTimeout(function() {
+            document.querySelector('#screen').style.display = 'block';
+            document.querySelector('#dialing').style.display = 'none';
+          },
+          3000);
+        }
+      })
+      .catch(err => {
+        console.log(err)
+
+        cti.sendError({
+          type: errorType.GENERIC,
+          message: 'Error fetching call status'
+        });
+      })
+      callStatus();
+    }, 5000);
+}
 
   const element = document.querySelector('.container');
 
@@ -151,30 +297,6 @@ const callback = () => {
           document.querySelector('#login').style.display = 'none';
           document.querySelector('#screen').style.display = 'block';
         }
-        break;
-
-      case 'Call Ended':
-        cti.callEnded();
-
-        document.querySelector('.status').innerHTML = 'Call Ended';
-
-
-        document.querySelector('#screen').style.display = 'block';
-        document.querySelector('#dialing').style.display = 'none';
-        document.querySelector('#controls').style.display = 'none';
-
-      case "Call Completed":
-        cti.callCompleted({
-          engagementId: state.engagementId
-        });
-
-        document.querySelector('.status').innerHTML = 'Call Completed';
-
-        document.querySelector('#screen').style.display = 'block';
-        document.querySelector('#dialing').style.display = 'none';
-        document.querySelector('.phonenumber').innerHTML = '';
-
-        document.querySelector('#controls').style.display = 'none';
         break;
       default:
         break;
