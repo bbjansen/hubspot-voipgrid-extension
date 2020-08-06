@@ -42,6 +42,7 @@ const callback = () => {
         // log
         console.log("DAILING")
         console.log(data )
+        //
         
         state.req_data = data;
 
@@ -101,20 +102,22 @@ const callback = () => {
             message: 'Error connecting to VoIPGRID'
           });
         })
-
-
       },
       onEngagementCreated: (data, rawEvent) => {
 
+        const { engagementId } = data;
+
         // log
         console.log("ENGAGEMENT CREATED")
-        console.log(data)
+        console.log(engagementId)
         //
 
-        state.engagement_id = data;
+        state.engagement_id = engagementId;
       },
       onEndCall: () => {
-        console.log('call ended')
+
+        console.log('CALL ENDED')
+        
         window.setTimeout(() => {
           cti.callEnded();
         }, 500);
@@ -134,8 +137,6 @@ const callback = () => {
 
   function callStatus() {
     state.timerId =  setTimeout(function () {
-      console.log('ID' + state.timerId)
-      console.log('THISID' + this.timerId)
 
       const headers =  {
         'Access-Control-Allow-Origin': '*',
@@ -154,47 +155,48 @@ const callback = () => {
       .then(res => {
 
         // log
+
+        console.log(res.data)
+        state.call_res = res.data.status
+
         console.log("CALL STATUS")
         console.log(res.data.status)
-        console.log(res.data)
-
-        state.call_res = res.data.status
 
         if(res.data === null) {
           console.log("NULL")
-
+      
           document.querySelector('.status').innerHTML = 'Initiating Call...';
-          document.querySelector('.phonenumber').innerHTML = state.phoneNumber;
-
+          document.querySelector('.phonenumber').innerHTML = state.req_data.phoneNumber;
+      
           document.querySelector('#screen').style.display = 'none';
           document.querySelector('#dialing').style.display = 'block';
         }
-        if(res.data.status === 'dialing_a') {
+        else if(res.data.status === 'dialing_a') {
           console.log("DAILING_A")
-
+      
           document.querySelector('.status').innerHTML = 'Directing Call...';
-          document.querySelector('.phonenumber').innerHTML = state.phoneNumber;
-
+          document.querySelector('.phonenumber').innerHTML = state.req_data.phoneNumber;
+      
           document.querySelector('#screen').style.display = 'none';
           document.querySelector('#dialing').style.display = 'block';
-
+      
         }
-        if(res.data.status === 'dialing_b') {
+        else if(res.data.status === 'dialing_b') {
           console.log("DAILING_B")
-
+      
           document.querySelector('.status').innerHTML = 'Dailing Contact...';
-          document.querySelector('.phonenumber').innerHTML = state.phoneNumber;
-
+          document.querySelector('.phonenumber').innerHTML = state.req_data.phoneNumber;
+      
           document.querySelector('#screen').style.display = 'none';
           document.querySelector('#dialing').style.display = 'block';
-
+      
         }
         else if(res.data.status === 'connected') {
           console.log("CONNECTED")
-
+      
           document.querySelector('.status').innerHTML = 'Call Connected';
-          document.querySelector('.phonenumber').innerHTML = state.phoneNumber;
-
+          document.querySelector('.phonenumber').innerHTML = state.req_data.phoneNumber;
+      
           document.querySelector('#screen').style.display = 'none';
           document.querySelector('#dialing').style.display = 'block';
           
@@ -207,48 +209,48 @@ const callback = () => {
         else if(res.data.status === 'disconnected') {
           console.log("DISCONNECTED")
           clearTimeout(state.timerId);
-
+      
           document.querySelector('.status').innerHTML = 'Call Disconnected';
-          document.querySelector('.phonenumber').innerHTML = state.phoneNumber;
-
+          document.querySelector('.phonenumber').innerHTML = state.req_data.phoneNumber;
+      
           document.querySelector('#screen').style.display = 'none';
-          document.querySelector('#dialing').style.display = 'nlock';
-
+          document.querySelector('#dialing').style.display = 'block';
+      
           window.setTimeout(
             () =>
             cti.callEnded(),
             500
           );
-
+      
           window.setTimeout(function() {
-            document.querySelector('#screen').style.display = 'block';
-            document.querySelector('#dialing').style.display = 'none';
-
+            // document.querySelector('#screen').style.display = 'block';
+            // document.querySelector('#dialing').style.display = 'none';
+      
             cti.callCompleted({
               engagementId: state.engagement_id,
               hideWidget: true
             })
-    
+      
           },
-          500);
+          2000);
         }
-        else if(res.data.status === 'failed_a' || 'failed_b') {
+        else if(res.data.status === 'failed_a' || res.data.status === 'failed_b') {
           console.log("FAILED")
-          clearTimeout(state.timerId);
-
-
+          // clearTimeout(state.timerId);
+      
+      
           document.querySelector('.status').innerHTML = 'Call Failed';
           document.querySelector('.phonenumber').innerHTML = state.phoneNumber;
-
-          document.querySelector('#screen').style.display = 'block';
-          document.querySelector('#dialing').style.display = 'none';
-
-
+      
+          document.querySelector('#screen').style.display = 'none';
+          document.querySelector('#dialing').style.display = 'block';
+      
+      
           window.setTimeout(function() {
-            document.querySelector('#screen').style.display = 'block';
-            document.querySelector('#dialing').style.display = 'none';
+            // document.querySelector('#screen').style.display = 'block';
+            // document.querySelector('#dialing').style.display = 'none';
           },
-          3000);
+          2000);
         }
       })
       .catch(err => {
@@ -260,7 +262,7 @@ const callback = () => {
         });
       })
       callStatus();
-    }, 5000);
+    }, 10000);
 }
 
   const element = document.querySelector('.container');
