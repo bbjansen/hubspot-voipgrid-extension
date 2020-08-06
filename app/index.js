@@ -217,30 +217,29 @@ const callback = () => {
           document.querySelector('#dialing').style.display = 'block';
       
           window.setTimeout(
-            () =>
+           () =>
             cti.callEnded(),
-            500
+            3000
           );
       
           window.setTimeout(function() {
-            // document.querySelector('#screen').style.display = 'block';
-            // document.querySelector('#dialing').style.display = 'none';
-      
+
             cti.callCompleted({
               engagementId: state.engagement_id,
-              hideWidget: true
+              hideWidget: false
             })
-      
+
+            cti.callEnded()
           },
-          2000);
+          5000);
         }
         else if(res.data.status === 'failed_a' || res.data.status === 'failed_b') {
           console.log("FAILED")
-          // clearTimeout(state.timerId);
+          clearTimeout(state.timerId);
       
       
           document.querySelector('.status').innerHTML = 'Call Failed';
-          document.querySelector('.phonenumber').innerHTML = state.phoneNumber;
+          document.querySelector('.phonenumber').innerHTML = state.req_data.phoneNumber;
       
           document.querySelector('#screen').style.display = 'none';
           document.querySelector('#dialing').style.display = 'block';
